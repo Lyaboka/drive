@@ -8,5 +8,7 @@ sealed class Screen : Parcelable {
     @Parcelize
     object AuthorizationPage : Screen()
 
+    @Parcelize
+    object MainPage: Screen()
 
 }

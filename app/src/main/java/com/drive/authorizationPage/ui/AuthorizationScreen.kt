@@ -3,7 +3,6 @@ package com.drive.authorizationPage.ui
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.R
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
@@ -18,9 +17,11 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.drive.authorizationPage.mvi.AuthorizationIntent
+import com.drive.authorizationPage.mvi.AuthorizationNavIntent
 import com.drive.authorizationPage.mvi.AuthorizationState
 import com.drive.authorizationPage.mvi.AuthorizationViewModel
 import com.drive.ui.theme.primaryColor
@@ -33,8 +34,6 @@ fun AuthorizationScreen(
     viewModel: AuthorizationViewModel
 ) {
 
-    val emailValue = remember { mutableStateOf("") }
-    val passwordValue = remember { mutableStateOf("") }
 
     val passwordVisibility = remember { mutableStateOf(false) }
 
@@ -60,28 +59,32 @@ fun AuthorizationScreen(
                 .fillMaxHeight(0.60f)
                 .clip(RoundedCornerShape(topStart = 30.dp, topEnd = 30.dp))
                 .background(whiteBackground)
-                .padding(10.dp)
+                .padding(16.dp)
         ) {
             Text(text = "Вход в систему", style = TextStyle(
                 fontWeight = FontWeight.Bold,
                 letterSpacing = 2.sp
             ),
-                fontSize = 30.sp
+                fontSize = 30.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
             Spacer(modifier = Modifier.padding(20.dp))
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 OutlinedTextField(
-                    value = emailValue.value,
-                    onValueChange = {viewModel.changeState(AuthorizationIntent.ChangeEmail(it))},
+                    value = state.email,
+                    onValueChange = {viewModel.publishIntent(AuthorizationIntent.ChangeEmail(email = it))},
                     label = { Text(text = "Email Address")},
                     placeholder = { Text(text = "Email Address")},
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth(0.8f)
+                    modifier = Modifier
+                        .height(56.dp)
+                        .fillMaxWidth(0.8f)
                 )
 
                 OutlinedTextField(
-                    value = passwordValue.value,
-                    onValueChange = {passwordValue.value = it},
+                    value = state.password,
+                    onValueChange = {viewModel.publishIntent(AuthorizationIntent.ChangePassword(it)) },
                     trailingIcon = {
                         IconButton(onClick = {
                             passwordVisibility.value = !passwordVisibility.value
@@ -100,15 +103,22 @@ fun AuthorizationScreen(
                     singleLine = true,
                     visualTransformation = if (passwordVisibility.value) VisualTransformation.None
                     else PasswordVisualTransformation(),
-                    modifier = Modifier.fillMaxWidth(0.8f)
+                    modifier = Modifier
+                        .height(56.dp)
+                        .fillMaxWidth(0.8f)
                 )
 
                 Spacer(modifier = Modifier.padding(10.dp))
-                Button(onClick = {},
+                Button(onClick = {viewModel.navigateToScreen(AuthorizationNavIntent.GoToMainScreen)},
                     Modifier
                         .fillMaxWidth(0.8f)
                         .height(50.dp)) {
-                    Text(text = "Войти", fontSize = 20.sp)
+                    Text(
+                        text = "Войти",
+                        fontSize = 20.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
 
                 Spacer(modifier = Modifier.padding(20.dp))

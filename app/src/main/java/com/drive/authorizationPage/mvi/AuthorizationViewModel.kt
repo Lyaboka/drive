@@ -1,11 +1,8 @@
 package com.drive.authorizationPage.mvi
 
-import android.text.TextUtils
-import android.util.Patterns
 import com.drive.baseMVI.MVIViewModel
 import com.drive.navigation.Screen
 import dev.olshevski.navigation.reimagined.NavController
-
 
 class AuthorizationViewModel
     (
@@ -13,25 +10,45 @@ class AuthorizationViewModel
     navigation: NavController<Screen>
 ) : MVIViewModel<
         AuthorizationState,
-        AuthorizationIntent> (state, navigation) {
+        AuthorizationIntent,
+        AuthorizationNavIntent>(state, navigation) {
 
     override fun changeState(intent: AuthorizationIntent): AuthorizationState =
         when (intent) {
-            is AuthorizationIntent.ChangeEmail -> changeEmail(intent, state.value, intent.login)
-            is AuthorizationIntent.ChangePassword -> state.value.copy(changePassword())
+            is AuthorizationIntent.ChangeEmail -> changeEmail(intent = intent, state = state.value)
+            is AuthorizationIntent.ChangePassword -> changePassword(intent = intent, state = state.value)
         }
 
-    private fun changeEmail(intent: AuthorizationIntent.ChangeEmail,
-                    state: AuthorizationState,
-                    email: String): AuthorizationState
-    {
-       return if (TextUtils.isEmpty(email))  state.copy(email, false)
-        else if (Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            state.copy(email, true)
-//            reduceIntent(intent)
-        } else state
-    }
-    private fun changePassword(intent: AuthorizationIntent.ChangePassword) {
+    override fun navigateToScreen(navIntent: AuthorizationNavIntent) =
+        when (navIntent) {
+            AuthorizationNavIntent.GoToMainScreen -> navigate(Screen.MainPage)
+        }
+
+    override fun publishIntent(intent: AuthorizationIntent) {
         reduceIntent(intent)
     }
+
+    private fun changeEmail(
+        intent: AuthorizationIntent.ChangeEmail,
+        state: AuthorizationState
+    ): AuthorizationState {
+        return if (intent.email == state.email) {
+            state
+        } else {
+            state.copy(email = intent.email, loginIsValid = true)
+        }
+    }
+
+    private fun changePassword(
+        intent: AuthorizationIntent.ChangePassword,
+    state: AuthorizationState
+    ): AuthorizationState {
+        return if (intent.password == state.password) {
+            state
+        } else {
+            state.copy(password = intent.password, passwordIsValid = true)
+        }
+    }
+
+
 }

@@ -3,13 +3,14 @@ package com.drive.baseMVI
 import androidx.lifecycle.ViewModel
 import com.drive.navigation.Screen
 import dev.olshevski.navigation.reimagined.NavController
+import dev.olshevski.navigation.reimagined.navigate
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-abstract class MVIViewModel<S: MVIState, I: MVIIntent>
+abstract class MVIViewModel<S: MVIState, I: MVIIntent, N:MVINavigationIntent>
    (
     state: S,
-    navigation: NavController<Screen>
+    private val navigation: NavController<Screen>
 ) : ViewModel()  {
         private val _state = MutableStateFlow(state)
         val state = _state.asStateFlow()
@@ -19,5 +20,11 @@ abstract class MVIViewModel<S: MVIState, I: MVIIntent>
         _state.value = changeState(intent)
     }
 
-    abstract fun changeState(intent: I) : S
+    fun navigate(screen: Screen) = navigation.navigate(screen)
+
+    abstract fun navigateToScreen(navIntent: N)
+
+    abstract fun publishIntent(intent: I)
+
+    protected abstract fun changeState(intent: I) : S
 }
