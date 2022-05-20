@@ -1,90 +1,142 @@
 package com.drive.mainPage.ui
 
-import android.app.DatePickerDialog
-import android.content.Context
-import android.widget.DatePicker
-import androidx.compose.foundation.border
+
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.Icon
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import com.drive.DataRepository
+import com.drive.R
+import com.drive.models.WorkDayModel
 import com.drive.mainPage.mvi.MainIntent
 import com.drive.mainPage.mvi.MainState
 import com.drive.mainPage.mvi.MainViewModel
+import com.drive.ui.theme.myAuthCarColor
+import com.drive.ui.theme.myLessonBackColor
+import com.drive.ui.theme.myLessonCarColor
+import com.drive.ui.theme.whiteBackground
 
-import java.util.*
-
-
+@ExperimentalMaterialApi
 @Composable
 fun MainScreen(
-    context: Context,
     state: MainState,
     viewModel: MainViewModel
 ) {
-    val year: Int
-    val month: Int
-    val day: Int
+    val sheetState = rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden)
 
-    val calendar = Calendar.getInstance()
+    LaunchedEffect(key1 = state.isBottomSheetOpen, block = {
+        if (state.isBottomSheetOpen)
+            sheetState.show()
+        else
+            sheetState.hide()
+    })
+    ModalBottomSheetLayout(
+        sheetBackgroundColor = Color.White,
+        sheetElevation = 5.dp,
+        sheetShape = RoundedCornerShape(topStart = 30.dp, topEnd = 30.dp),
+        sheetState = sheetState,
+        sheetContent = {
+            Box(modifier = Modifier.defaultMinSize(minHeight = 50.dp)) {
+                TimePeriods(timePeriods = state.pickedWorkDay.time, onClick = {
+                    viewModel.publishIntent(MainIntent.SetTimePeriod(timePeriod = it))
+                    viewModel.publishIntent(MainIntent.OpenOrCloseBS)
+                }
+                )
 
-    year = calendar.get(Calendar.YEAR)
-    month = calendar.get(Calendar.MONTH)
-    day = calendar.get(Calendar.DAY_OF_MONTH)
+            }
+        }
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            myLessonBackColor,
+                            myAuthCarColor,
+                            myLessonCarColor
+                        )
+                    )
+                )
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .padding(16.dp)
+                    .fillMaxWidth(1f)
+                    .fillMaxHeight(0.9f)
+                    .clip(RoundedCornerShape(30.dp))
+                    .background(whiteBackground)
 
-    val datePickerDialog = DatePickerDialog(
-        context,
-        { _: DatePicker, _year: Int, _month: Int, _day: Int ->
-            val date = "$_day/$_month/$_year"
-            viewModel.publishIntent(MainIntent.SetDate(date = date))
-        }, year, month, day
-    )
-    Column(
+
+            ) {
+                Image(
+                    painter = painterResource(
+                        id = R.drawable.history_im
+                    ),
+                    contentDescription = "Login image",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                )
+                Lessons(
+                    workdays = state.workDays,
+                    onClick = {
+                        viewModel.publishIntent(MainIntent.OpenOrCloseBS)
+                        viewModel.publishIntent(MainIntent.SetLesson(pickedWorkDay = it))
+                    })
+            }
+        }
+    }
+}
+
+@ExperimentalMaterialApi
+@Composable
+fun Lessons(workdays: List<WorkDayModel>, onClick: (WorkDayModel) -> Unit) {
+    LazyColumn(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp)
     ) {
-
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(50.dp)
-                .wrapContentSize(Alignment.TopStart)
-                .border(0.5.dp, MaterialTheme.colors.onSurface.copy(alpha = 0.5f))
-                .clickable {
-                    datePickerDialog.show()
-                })
-        {
-            Row(horizontalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier.fillMaxWidth()) {
-                Text(
-                    text = "Выберите дату",
-                    modifier = Modifier
-                        .padding(top = 10.dp, bottom = 10.dp, start = 16.dp, end = 16.dp)
-
-
-                )
-                Icon(
-                    imageVector = Icons.Default.DateRange,
-                    contentDescription = null,
-                    modifier = Modifier
-                        .padding(top = 10.dp, bottom = 10.dp, start = 16.dp, end = 16.dp)
-                        .size(20.dp, 20.dp),
-                    tint = MaterialTheme.colors.onSurface
+        items(workdays) {
+            Surface(modifier = Modifier.clickable { onClick(it) }) {
+                DateCard(
+                    date = it.date,
+                    car = it.car,
+                    instr = it.instructor
                 )
             }
         }
-        Spacer(modifier = Modifier.padding(16.dp))
-        Text(
-            text = "Выбранная дата: ${state.date}",
-            modifier = Modifier.border(0.5.dp, MaterialTheme.colors.onSurface.copy(alpha = 0.5f))
-        )
+    }
+
+}
+
+@Composable
+fun TimePeriods(timePeriods: List<String>, onClick: (String) -> Unit) {
+    LazyColumn(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 55.dp)
+    ) {
+        items(timePeriods) {
+            Surface(modifier = Modifier.clickable { onClick(it) }) {
+                TimeCard(time = it)
+            }
+        }
     }
 }
+

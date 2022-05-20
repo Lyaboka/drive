@@ -1,4 +1,4 @@
-package com.drive.history
+package com.drive.history.mvi
 
 import com.drive.baseMVI.MVINavigationIntent
 

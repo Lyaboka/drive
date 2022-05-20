@@ -1,6 +1,9 @@
-package com.drive.history
+package com.drive.history.mvi
 
 import com.drive.baseMVI.MVIIntent
+import com.drive.models.LessonModel
 
-class HistoryIntent : MVIIntent {
+sealed class HistoryIntent : MVIIntent {
+    class GetLessons(val lessons: List<LessonModel>): HistoryIntent()
+
 }

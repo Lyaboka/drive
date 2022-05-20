@@ -9,8 +9,7 @@ import kotlinx.coroutines.flow.asStateFlow
 
 abstract class MVIViewModel<S: MVIState, I: MVIIntent, N:MVINavigationIntent>
    (
-    state: S,
-    private val navigation: NavController<Screen>
+    state: S
 ) : ViewModel()  {
         private val _state = MutableStateFlow(state)
         val state = _state.asStateFlow()
@@ -20,7 +19,7 @@ abstract class MVIViewModel<S: MVIState, I: MVIIntent, N:MVINavigationIntent>
         _state.value = changeState(intent)
     }
 
-    fun navigate(screen: Screen) = navigation.navigate(screen)
+    abstract fun navigate(screen: Screen)
 
     abstract fun navigateToScreen(navIntent: N)
 
